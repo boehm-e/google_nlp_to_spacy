@@ -14,12 +14,13 @@ class GSToken(object):
     def __init__(self, token, index):
         # self.token = self.build_token(token, i)
         self.text = token.text.content
-        self.lower = token.text.content.lower()
+        self.lower_ = token.text.content.lower()
         self.shape = "".join(["X" if x.isupper() else "x" for x in self.text])
         self.lemma_ = token.lemma
         self.pos_ = pos_tag[token.part_of_speech.tag]
         self.dep_ = dep_tag[token.dependency_edge.label]
         self.head = token.dependency_edge.head_token_index
+        self.head_ = token.dependency_edge.head_token_index
         self.is_lower = self.text.islower()
         self.is_upper = self.text.isupper()
         self.is_title = self.text.istitle()
@@ -30,8 +31,9 @@ class GSToken(object):
         return repr(self.text)
 
     def make_references(self, tokens):
-        self.lefts  = [left_token for left_token in tokens if self.head == left_token.head and left_token.i < self.i ]
-        self.rights = [right_token for right_token in tokens if self.head == right_token.head and right_token.i > self.i]
+        self.lefts  = [left_token for left_token in tokens if self.head_ == left_token.head_ and left_token.i < self.i ]
+        self.rights = [right_token for right_token in tokens if self.head_ == right_token.head_ and right_token.i > self.i]
+        # print(self.text, self.lefts, self.rights)
         self.head = tokens[self.head]
 
 
