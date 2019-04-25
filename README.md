@@ -7,7 +7,7 @@ I was working on a NLP project and began to create algorithmes with spacy classe
 For some reason (mostly scalability, and performances) I decided to switch to google cloud language, which acchieve the current state of the art results on 11 NLP tasks ([google blog](https://ai.googleblog.com/2018/11/open-sourcing-bert-state-of-art-pre.html))
 
 ### Goal
-The goal of this project is to provide a simple transition Spacy to Google Cloud NLP by providing wrappers to Google NLP that matches Spacy documentation.
+The goal of this project is to provide a simple transition from Spacy to Google Cloud NLP by providing wrappers to Google NLP that matches Spacy documentation.
 So (ideally) we only have to change a few line to our code and all would be working.
 
 ### Prerequisites
@@ -26,7 +26,7 @@ To use this module do as follow :
     ```
 - run the example
     ```
-    python example.py
+    python3 example.py
     ```
 
 - use in your project
