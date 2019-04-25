@@ -61,8 +61,9 @@ To use this module do as follow :
 |  text         | String   | Verbatim text content.                            |
 |  pos_         | String   | Coarse-grained part-of-speech                     |
 |  dep_         | String   | Syntactic dependency relation                     |
-|  head         | *GSToken  | The head index in the dependency tree            |
+|  head         | *GSToken | The head index in the dependency tree             |
 |  i            | Integer  | The index of the token within the parent document.|
+|  idx          | Integer  | The begin offset of the token within the document.|
 |  lemma_       | String   | Base form of the token                            |
 |  lower        | String   | Lowercase form of the token                       |
 |  shape        | String   | "Hello World" => "Xxxxx Xxxxx"                    |
