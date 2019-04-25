@@ -33,16 +33,22 @@ To use this module do as follow :
     ```python
     from google_spacy import GoogleSpacy
     gspacy = GoogleSpacy()
+    sentences, tokens = gspacy.nlp("The lion is walking.")
 
-    tokens = gspacy.nlp("The lion is walking")
 
     for token in tokens:
       print( token.text, token.lemma_, token.pos_, token.dep_ )
 
-    # The The DET DET
-    # lion lion NOUN NSUBJ
-    # is be VERB AUX
-    # walking walk VERB ROOT
+    # The       The     DET    DET
+    # lion      lion    NOUN   NSUBJ
+    # is        be      VERB   AUX
+    # walking   walk    VERB   ROOT
+
+    sentences, tokens = gspacy.nlp("The lion is walking. It is in the forest.")
+    print(sentences)
+    # each is of type GSToken, so you can access its dep, pos, lemma ...
+    # [ ["The", "lion", "is", "walking", "."], ["It", "is", "in", "the", "forest."] ]
+
     ```
 
 
