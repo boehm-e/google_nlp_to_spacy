@@ -31,11 +31,8 @@ class GSToken(object):
         return repr(self.text)
 
     def make_references(self, tokens):
-        self.lefts = [left_token for left_token in tokens if self.head_
-                      == left_token.head_ and left_token.i < self.i]
-        self.rights = [right_token for right_token in tokens if self.head_
-                       == right_token.head_ and right_token.i > self.i]
-        # print(self.text, self.lefts, self.rights)
+        self.lefts = [left_token for left_token in tokens if self.i == tokens[left_token.head_].i and left_token.i < self.i]
+        self.rights = [right_token for right_token in tokens if self.i == tokens[right_token.head_].i and right_token.i > self.i]
         self.head = tokens[self.head]
 
 
