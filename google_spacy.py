@@ -53,6 +53,25 @@ class GSSpan(object):
         txt = self.txt[start:end]
         return txt
 
+    def to_json(self):
+        obj = {}
+        obj["text"] = self.to_string()
+        obj["tokens"] = [{
+            "id": tok.i,
+            "text": tok.text,
+            "lemma": tok.lemma_,
+            "gender": tok.gender,
+            "person": tok.person,
+            "number": tok.number,
+            "start": tok.idx,
+            "end": tok.idx + len(tok.text),
+            "pos": tok.pos_,
+            "dep": tok.dep_,
+            "head": tok.head.i
+        } for tok in self.doc[self.start:self.end]]
+        return obj
+
+
 
 class GSDoc(object):
     """docstring for GSDoc."""

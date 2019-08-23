@@ -106,6 +106,23 @@ you can export and import document (for example, to store it in a database)
 
 ### References
 
+- ### GSDoc
+
+| Name          | Type     | Description                                       |
+| ------------- | -------- | --------------------------------------------------|
+|  \_\_getitem\_\_ (position)          | GSToken   | The token at doc[i].                            |
+|  \_\_getitem\_\_ (range)          | GSSpan   | The span at doc[start:end].                            |
+|  to_json()          | json   | A json representation of the document who can be stored and used to construct the same Doc |
+
+- ## GSSpan
+
+| Name          | Type     | Description                                       |
+| ------------- | -------- | --------------------------------------------------|
+|  doc         | GSDoc   | The parent document.                            |
+|  start         | int   | The index of the first token of the span. |
+|  end         | int   |  The index of the first token after the span. |
+|  to_json()          | json   | A json representation of the document who can be stored and used to construct the same Doc |
+
 - ### GSToken
 
 | Name          | Type     | Description                                       |
@@ -114,6 +131,9 @@ you can export and import document (for example, to store it in a database)
 |  pos_         | String   | Coarse-grained part-of-speech                     |
 |  dep_         | String   | Syntactic dependency relation                     |
 |  head         | *GSToken | The head index in the dependency tree             |
+|  lefts        | *GSToken | The leftward immediate children of the word, in the syntactic dependency parse. |
+|  rights         | *GSToken | The rightward immediate children of the word, in the syntactic dependency parse.|
+|  children         | *GSToken | A sequence of the token’s immediate syntactic children. |
 |  i            | Integer  | The index of the token within the parent document.|
 |  idx          | Integer  | The begin offset of the token within the document.|
 |  lemma_       | String   | Base form of the token                            |
