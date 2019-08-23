@@ -119,9 +119,9 @@ you can export and import document (for example, to store it in a database)
 |  lemma_       | String   | Base form of the token                            |
 |  lower        | String   | Lowercase form of the token                       |
 |  shape        | String   | "Hello World" => "Xxxxx Xxxxx"                    |
-|  gender       | String   | GENDER_UNKNOWN | FEMININE | MASCULINE | NEUTER    |
-|  person       | String   | PERSON_UNKNOWN | FIRST | SECOND | THIRD | REFLEXIVE_PERSON |
-|  number       | String   | NUMBER_UNKNOWN | SINGULAR | PLURAL | DUAL  |
+|  gender       | String   | GENDER_UNKNOWN \| FEMININE \| MASCULINE \| NEUTER    |
+|  person       | String   | PERSON_UNKNOWN \| FIRST \| SECOND \| THIRD \| REFLEXIVE_PERSON |
+|  number       | String   | NUMBER_UNKNOWN \| SINGULAR \| PLURAL \| DUAL  |
 |  is_lower     | Boolean  | Is the token in lowercase?                        |
 |  is_upper     | Boolean  | Is the token in uppercase?                        |
 |  is_title     | Boolean  | Is the token in titlecase?                        |
