@@ -21,88 +21,88 @@ pip install google-cloud-language
 ## To use this module do as follow :
 
 ### clone the repository
-    ```
-    git clone git@github.com:boehm-e/google_nlp_to_spacy.git
-    ```
+```
+git clone git@github.com:boehm-e/google_nlp_to_spacy.git
+```
 ### try it
-    ```
-    python3 example.py
-    ```
+```
+python3 example.py
+```
 
 ### use in your project
-    ```python
-    #setup
-    gspacy = GoogleSpacy()
-    gnlp = gspacy.load('fr')
+```python
+#setup
+gspacy = GoogleSpacy()
+gnlp = gspacy.load('fr')
 
-    doc = gnlp("Le lion marche dans la foret.")
-    for token in doc:
-        print( token.text, token.lemma_, token.pos_, token.dep_ )
+doc = gnlp("Le lion marche dans la foret.")
+for token in doc:
+    print( token.text, token.lemma_, token.pos_, token.dep_ )
 
-      # | lion   | lion    | NOUN  | nsubj   |
-      # |--------|---------|-------|---------|
-      # | marche | marcher | VERB  | root    |
-      # |--------|---------|-------|---------|
-      # | dans   | dans    | ADP   | prep    |
-      # |--------|---------|-------|---------|
-      # | la     | le      | DET   | det     |
-      # |--------|---------|-------|---------|
-      # | foret  | foret   | NOUN  | pobj    |
-      # |--------|---------|-------|---------|
-      # | .      | .       | PUNCT | p       |
+  # | lion   | lion    | NOUN  | nsubj   |
+  # |--------|---------|-------|---------|
+  # | marche | marcher | VERB  | root    |
+  # |--------|---------|-------|---------|
+  # | dans   | dans    | ADP   | prep    |
+  # |--------|---------|-------|---------|
+  # | la     | le      | DET   | det     |
+  # |--------|---------|-------|---------|
+  # | foret  | foret   | NOUN  | pobj    |
+  # |--------|---------|-------|---------|
+  # | .      | .       | PUNCT | p       |
 
 
-    doc = gnlp("Le lion marche. Il est dans la foret.")
-    print(doc.sents)
-    # [Le lion marche., Il est dans la foret.]
-    ```
+doc = gnlp("Le lion marche. Il est dans la foret.")
+print(doc.sents)
+# [Le lion marche., Il est dans la foret.]
+```
 
 ### export and import
 you can export and import document (for example, to store it in a database)
 
 #### export to json
-    ```python
+```python
 
-    # export
-    doc = gnlp("Avec la mer du Nord pour dernier terrain vague")
-    jsonDoc = doc.to_json()
+# export
+doc = gnlp("Avec la mer du Nord pour dernier terrain vague")
+jsonDoc = doc.to_json()
 
-    #>{'text': 'Avec la mer du Nord pour dernier terrain vague',
-    #  'sents': [{'start': 0, 'end': 40}],
-    #  'tokens': [{'id': 0,
-    #    'text': 'Avec',
-    #    'lemma': 'Avec',
-    #    'gender': 'GENDER_UNKNOWN',
-    #    'person': 'PERSON_UNKNOWN',
-    #    'number': 'NUMBER_UNKNOWN',
-    #    'start': 0,
-    #    'end': 4,
-    #    'pos': 'ADP',
-    #    'dep': 'root',
-    #    'head': 0},
-    #   ... ... ...
-    #   {'id': 8,
-    #    'text': 'vague',
-    #    'lemma': 'vague',
-    #    'gender': 'MASCULINE',
-    #    'person': 'PERSON_UNKNOWN',
-    #    'number': 'SINGULAR',
-    #    'start': 41,
-    #    'end': 46,
-    #    'pos': 'NOUN',
-    #    'dep': 'nn',
-    #    'head': 7}]
-    #   }
-    ```
+#>{'text': 'Avec la mer du Nord pour dernier terrain vague',
+#  'sents': [{'start': 0, 'end': 40}],
+#  'tokens': [{'id': 0,
+#    'text': 'Avec',
+#    'lemma': 'Avec',
+#    'gender': 'GENDER_UNKNOWN',
+#    'person': 'PERSON_UNKNOWN',
+#    'number': 'NUMBER_UNKNOWN',
+#    'start': 0,
+#    'end': 4,
+#    'pos': 'ADP',
+#    'dep': 'root',
+#    'head': 0},
+#   ... ... ...
+#   {'id': 8,
+#    'text': 'vague',
+#    'lemma': 'vague',
+#    'gender': 'MASCULINE',
+#    'person': 'PERSON_UNKNOWN',
+#    'number': 'SINGULAR',
+#    'start': 41,
+#    'end': 46,
+#    'pos': 'NOUN',
+#    'dep': 'nn',
+#    'head': 7}]
+#   }
+```
 
 #### import from json
-    ```python
-    doc = gnlp(jsonDoc, from_json=True) # we take the json export from previous example
 
-    print(doc[2])
-    #> mer
-    ```
+```python
+doc = gnlp(jsonDoc, from_json=True) # we take the json export from previous example
 
+print(doc[2])
+#> mer
+```
 
 ### References
 
