@@ -1,8 +1,7 @@
 from google_spacy import GoogleSpacy, Nlp
 
 gspacy = GoogleSpacy()
-gspacy.set_language('fr')
-gnlp = gspacy.nlp
+gnlp = gspacy.load('fr')
 
 # create a document
 doc = gnlp("Avec la mer du Nord pour dernier terrain vague")
@@ -10,7 +9,7 @@ doc = gnlp("Avec la mer du Nord pour dernier terrain vague")
 print([tok.text for tok in doc])
 print([tok.shape for tok in doc])
 print([sent for sent in doc.sentences])
-# ['Avec', 'la', 'mer', 'du', 'Nord', 'pour', 'dernier', 'terrain', 'vague']
+# [Avec, la, mer, du, Nord, pour, dernier, terrain, vague]
 # ['Xxxx', 'xx', 'xxx', 'xx', 'Xxxx', 'xxxx', 'xxxxxxx', 'xxxxxxx', 'xxxxx']
 # [['Avec', 'la', 'mer', 'du', 'Nord', 'pour', 'dernier', 'terrain', 'vague']]
 

@@ -11,38 +11,104 @@ person_tag = ('PERSON_UNKNOWN', 'FIRST', 'SECOND', 'THIRD', 'REFLEXIVE_PERSON')
 number_tag = ('NUMBER_UNKNOWN', 'SINGULAR', 'PLURAL', 'DUAL')
 
 
-# helpers
-def to_string(txt):
-    punctRegex = re.compile('\s(?=[\.\?!,])', flags=re.IGNORECASE)
-    apostrophRegex = re.compile("(?<=(l'|s'|m'|n'|t'))\s", flags=re.IGNORECASE)
-    txt = punctRegex.sub('', txt)
-    txt = apostrophRegex.sub('', txt)
-    return txt
+# # helpers
+# def to_string(txt):
+#     punctRegex = re.compile('\s(?=[\.\?!,])', flags=re.IGNORECASE)
+#     apostrophRegex = re.compile("(?<=(l'|s'|m'|n'|t'))\s", flags=re.IGNORECASE)
+#     txt = punctRegex.sub('', txt)
+#     txt = apostrophRegex.sub('', txt)
+#     return txt
 
 
-class Nlp(object):
-    """docstring for Nlp."""
+class GSSpan(object):
+    """docstring for GSSpan"""
 
-    def __init__(self, ret):
-        super(Nlp, self).__init__()
-
-        self.ret = ret
-        self.doc = self.process_tokens(self.ret.tokens)
-        self.sentences = self.process_sentences(self.doc, self.ret.sentences)
+    def __init__(self, txt, doc, start, end):
+        super(GSSpan, self).__init__()
+        self.doc = doc
+        self.txt = txt
+        self.start = start
+        self.end = end
 
     def __getitem__(self, index):
-        return self.doc[index]
+        if isinstance(index, slice):
+            start = index.start
+            end = index.stop
+            return GSSpan(self.txt, self.doc, start + self.start, end + self.start)
+        else:
+            if index < 0:
+                return self.doc[self.end + index]
+            else:
+                return self.doc[self.start + index]
 
     def __str__(self):
-        # txt = " ".join([tok.text for tok in self.doc])
         return self.to_string()
 
-    def serialize(self):
-        return self.ret.SerializeToString()
+    def __repr__(self):
+        return self.to_string()
 
     def to_string(self):
-        txt = " ".join([tok.text for tok in self.doc])
-        return to_string(txt)
+        start = self.doc[self.start].idx
+        end = self.doc[self.end].idx + len(self.doc[self.end].text)
+        txt = self.txt[start:end]
+        return txt
+
+
+class GSDoc(object):
+    """docstring for GSDoc."""
+
+    def __init__(self, txt, raw, from_json=False):
+        super(GSDoc, self).__init__()
+        self.from_json = from_json
+        self.txt = txt
+        self.raw = raw # data from google cloud nlp | from json dump
+
+        if self.from_json is True:
+            self.doc = self.process_tokens(self.raw["tokens"])
+            self.sents = self.process_sentences(self.doc, self.raw["sents"])
+        else:
+            self.doc = self.process_tokens(self.raw.tokens)
+            self.sents = self.process_sentences(self.doc, self.raw.sentences)
+
+    def __getitem__(self, index):
+        if isinstance(index, int):
+            return self.doc[index]
+
+        elif isinstance(index, slice):
+            start = index.start
+            end = index.stop
+            return GSSpan(self.txt, self.doc, start, end)
+
+    def __str__(self):
+        return self.to_string()
+
+    def __repr__(self):
+        return self.to_string()
+
+    def to_string(self):
+        start = self.doc[0].idx
+        end = self.doc[-1].idx + len(self.doc[-1].text)
+        txt = self.txt[start:end]
+        return txt
+
+    def to_json(self):
+        obj = {}
+        obj["text"] = self.txt
+        obj["sents"] = [{"start":sent[0].idx, "end": sent[-1].idx + len(sent[-1].text)} for sent in self.sents]
+        obj["tokens"] = [{
+            "id": tok.i,
+            "text": tok.text,
+            "lemma": tok.lemma_,
+            "gender": tok.gender,
+            "person": tok.person,
+            "number": tok.number,
+            "start": tok.idx,
+            "end": tok.idx + len(tok.text),
+            "pos": tok.pos_,
+            "dep": tok.dep_,
+            "head": tok.head.i
+        } for tok in self.doc]
+        return obj
 
     def find_children_direct(self, head):
         return [tok for tok in self.doc if tok if tok.head.i == head.i]
@@ -66,54 +132,89 @@ class Nlp(object):
     def process_tokens(self, tokens):
         self.GSTokens = []
         for i, token in enumerate(tokens):
-            self.GSTokens.append(GSToken(token, i))
+            self.GSTokens.append(GSToken(token, i, from_json=self.from_json))
 
         for token in self.GSTokens:
             token.make_references(self.GSTokens)
+
+        for token in self.GSTokens:
+            token.find_childrens(self.GSTokens)
 
         return self.GSTokens
 
     def process_sentences(self, doc, sents):
         sentences = []
-        offsets = [{"begin": sent.text.begin_offset, "end": sent.text.begin_offset + len(sent.text.content)} for sent in sents]
+        if self.from_json is True:
+            offsets = [{"begin": sent["start"], "end": sent["end"]} for sent in sents]
+        else:
+            offsets = [{"begin": sent.text.begin_offset, "end": sent.text.begin_offset + len(sent.text.content)} for sent in sents]
 
         for offset in offsets:
             begin = offset["begin"]
             end = offset["end"]
-            sentences.append([tok for tok in doc if tok.idx >= begin and tok.idx <= end])
+            st = [tok for tok in doc if tok.idx >= begin and tok.idx <= end]
+            _begin = st[0].i
+            _end = st[-1].i
+
+            sentences.append(GSSpan(self.txt, doc, _begin, _end))
 
         return sentences
 
 
 class GSToken(object):
-    def __init__(self, token, index):
+    def __init__(self, token, index, from_json=False):
         # self.token = self.build_token(token, i)
-        self.text = token.text.content
-        self.lower_ = token.text.content.lower()
-        self.shape = "".join(["X" if x.isupper() else "x" for x in self.text])
-        self.lemma_ = token.lemma
-        self.pos_ = pos_tag[token.part_of_speech.tag]
-        self.dep_ = dep_tag[token.dependency_edge.label]
-        self.head = token.dependency_edge.head_token_index
-        self.gender = gender_tag[token.part_of_speech.gender]
-        self.person = person_tag[token.part_of_speech.person]
-        self.number = number_tag[token.part_of_speech.number]
-        self.head_ = token.dependency_edge.head_token_index
-        self.is_lower = self.text.islower()
-        self.is_upper = self.text.isupper()
-        self.is_title = self.text.istitle()
-        self.is_space = self.text.isspace()
-        self.i = index
-        self.idx = token.text.begin_offset  # pos of first letter of token
+        if from_json is True:
+            self.text = token["text"]
+            self.lower_ = self.text.lower()
+            self.shape = "".join(["X" if x.isupper() else "x" for x in self.text])
+            self.lemma_ = token["lemma"]
+            self.pos_ = token["pos"]
+            self.dep_ = token["dep"]
+            self.head = token["head"]
+            self.head_ = token["head"]
+            self.gender = token["gender"]
+            self.person = token["person"]
+            self.number = token["number"]
+            self.is_lower = self.text.islower()
+            self.is_upper = self.text.isupper()
+            self.is_title = self.text.istitle()
+            self.is_space = self.text.isspace()
+            self.i = index
+            self.idx = token["start"]  # pos of first letter of token
+        else:
+            self.text = token.text.content
+            self.lower_ = token.text.content.lower()
+            self.shape = "".join(["X" if x.isupper() else "x" for x in self.text])
+            self.lemma_ = token.lemma
+            self.pos_ = pos_tag[token.part_of_speech.tag]
+            self.dep_ = dep_tag[token.dependency_edge.label]
+            self.head = token.dependency_edge.head_token_index
+            self.gender = gender_tag[token.part_of_speech.gender]
+            self.person = person_tag[token.part_of_speech.person]
+            self.number = number_tag[token.part_of_speech.number]
+            self.head_ = token.dependency_edge.head_token_index
+            self.is_lower = self.text.islower()
+            self.is_upper = self.text.isupper()
+            self.is_title = self.text.istitle()
+            self.is_space = self.text.isspace()
+            self.i = index
+            self.idx = token.text.begin_offset  # pos of first letter of token
+
+    def __str__(self):
+        return self.text
 
     def __repr__(self):
-        return repr(self.text)
+        return self.text
 
     def make_references(self, tokens):
         self.lefts = [left_token for left_token in tokens if self.i == tokens[left_token.head_].i and left_token.i < self.i]
         self.rights = [right_token for right_token in tokens if self.i == tokens[right_token.head_].i and right_token.i > self.i]
         self.head = tokens[self.head]
-        # print(self.text, self.lefts, self.rights)
+
+    def find_childrens(self, doc):
+        self.doc = doc
+        self.children = [tok for tok in self.doc if tok.head.i == self.i]
 
 
 class GoogleSpacy(object):
@@ -124,17 +225,14 @@ class GoogleSpacy(object):
     def __str__(self):
         return 'Fubar'
 
-    def set_language(self, lang):
+    def load(self, lang):
         self.lang = lang
+        return self.nlp
 
     def sort_by_index(self, tokList):
         lst = tokList
         lst.sort(key=lambda x: x.i)
         return lst
-
-    def doc_to_string(self, doc):
-        txt = " ".join([tok.text for tok in doc])
-        return to_string(txt)
 
     def find_children_direct(self, doc, head):
         return [tok for tok in doc if tok if tok.head.i == head.i]
@@ -155,11 +253,10 @@ class GoogleSpacy(object):
         flatten.sort(key=lambda x: x.i)
         return flatten
 
-    def correct_punct(self, txt):
-        return to_string(txt)
+    def nlp(self, raw, from_json=False):
+        if from_json is False:
+            text = raw
 
-    def nlp(self, text):
-        if isinstance(text, str):
             # Instantiates a client
             client = language.LanguageServiceClient()
             # Instantiates a plain text document.
@@ -170,7 +267,9 @@ class GoogleSpacy(object):
 
             # Detects syntax in the document. You can also analyze HTML with:
             ret = client.analyze_syntax(document, enums.EncodingType.UTF32)
-            return Nlp(ret)
-
-        elif isinstance(text, bytes):
-            return Nlp(types.AnalyzeSyntaxResponse().FromString(text))
+            data = ret
+            return GSDoc(text, data, from_json=from_json)
+        else:
+            json = raw
+            text = json["text"]
+            return GSDoc(text, json, from_json=from_json)

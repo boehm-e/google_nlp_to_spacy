@@ -17,57 +17,94 @@ in order to run this, you will need the google cloud language package :
 pip install google-cloud-language
 ```
 
-### Usage
-To use this module do as follow :
+# Usage
+## To use this module do as follow :
 
-- clone the repository
+### clone the repository
     ```
     git clone git@github.com:boehm-e/google_nlp_to_spacy.git
     ```
-- run the example
+### try it
     ```
     python3 example.py
     ```
 
-- use in your project
+### use in your project
     ```python
     #setup
     gspacy = GoogleSpacy()
-    gspacy.set_language('fr')
-    gnlp = gspacy.nlp
+    gnlp = gspacy.load('fr')
 
-    doc = gnlp("The lion is walking.")
+    doc = gnlp("Le lion marche dans la foret.")
     for token in doc:
-      print( token.text, token.lemma_, token.pos_, token.dep_ )
+        print( token.text, token.lemma_, token.pos_, token.dep_ )
 
-    # The       The     DET    DET
-    # lion      lion    NOUN   NSUBJ
-    # is        be      VERB   AUX
-    # walking   walk    VERB   ROOT
+      # | lion   | lion    | NOUN  | nsubj   |
+      # |--------|---------|-------|---------|
+      # | marche | marcher | VERB  | root    |
+      # |--------|---------|-------|---------|
+      # | dans   | dans    | ADP   | prep    |
+      # |--------|---------|-------|---------|
+      # | la     | le      | DET   | det     |
+      # |--------|---------|-------|---------|
+      # | foret  | foret   | NOUN  | pobj    |
+      # |--------|---------|-------|---------|
+      # | .      | .       | PUNCT | p       |
 
 
-    doc = gnlp("The lion is walking. It is in the forest.")
-    print(doc.sentences)
-    # [ ["The", "lion", "is", "walking", "."], ["It", "is", "in", "the", "forest", "."] ]
-    # each is of type GSToken, so you can access its dep, pos, lemma ...
-
+    doc = gnlp("Le lion marche. Il est dans la foret.")
+    print(doc.sents)
+    # [Le lion marche., Il est dans la foret.]
     ```
 
-- serialization and deserialization
+### export and import
+you can export and import document (for example, to store it in a database)
+
+#### export to json
     ```python
-    # you can call gnlp with text or serialized bytes (from database)
 
-    # serialize
+    # export
     doc = gnlp("Avec la mer du Nord pour dernier terrain vague")
+    jsonDoc = doc.to_json()
 
-    serializedDoc = doc.serialize()
-    #> b'\n2\n0\n.Avec la mer du Nord pour dernier terrain vague\x12\x18\n\x06\n\x04Avec\x12\x04\x08\x02H\x02\x1a\x02\x106"\x04Avec\x12\x1c\n\x06\n\x02la\x10\x05\x12\x08\x08\x05(\x018\x01H\x02\x1a\x04\x08\x02\x10\x10"\x02le\x12\x1c\n\x07\n\x03mer\x10\x08\x12\x08\x08\x06(\x018\x01H\x02\x1a\x02\x10$"\x03mer\x12\x1c\n\x06\n\x02du\x10\x0c\x12\x08\x08\x02(\x028\x01H\x02\x1a\x04\x08\x02\x10+"\x02du\x12 \n\x08\n\x04Nord\x10\x0f\x12\x08\x08\x06(\x028\x01H\x01\x1a\x04\x08\x03\x10$"\x04Nord\x12\x1a\n\x08\n\x04pour\x10\x14\x12\x04\x08\x02H\x02\x1a\x02\x10+"\x04pour\x12&\n\x0b\n\x07dernier\x10\x19\x12\x08\x08\x01(\x028\x01H\x02\x1a\x04\x08\x07\x10\x05"\x07dernier\x12&\n\x0b\n\x07terrain\x10!\x12\x08\x08\x06(\x028\x01H\x02\x1a\x04\x08\x05\x10$"\x07terrain\x12"\n\t\n\x05vague\x10)\x12\x08\x08\x06(\x028\x01H\x02\x1a\x04\x08\x07\x10\x1a"\x05vague\x1a\x02fr'
-
-    deserializedDoc = gnlp(serializedDoc)
-
-    # here doc and deserializedDoc are the same
+    #>{'text': 'Avec la mer du Nord pour dernier terrain vague',
+    #  'sents': [{'start': 0, 'end': 40}],
+    #  'tokens': [{'id': 0,
+    #    'text': 'Avec',
+    #    'lemma': 'Avec',
+    #    'gender': 'GENDER_UNKNOWN',
+    #    'person': 'PERSON_UNKNOWN',
+    #    'number': 'NUMBER_UNKNOWN',
+    #    'start': 0,
+    #    'end': 4,
+    #    'pos': 'ADP',
+    #    'dep': 'root',
+    #    'head': 0},
+    #   ... ... ...
+    #   {'id': 8,
+    #    'text': 'vague',
+    #    'lemma': 'vague',
+    #    'gender': 'MASCULINE',
+    #    'person': 'PERSON_UNKNOWN',
+    #    'number': 'SINGULAR',
+    #    'start': 41,
+    #    'end': 46,
+    #    'pos': 'NOUN',
+    #    'dep': 'nn',
+    #    'head': 7}]
+    #   }
     ```
-## References
+
+#### import from json
+    ```python
+    doc = gnlp(jsonDoc, from_json=True) # we take the json export from previous example
+
+    print(doc[2])
+    #> mer
+    ```
+
+
+### References
 
 - ### GSToken
 
@@ -82,6 +119,9 @@ To use this module do as follow :
 |  lemma_       | String   | Base form of the token                            |
 |  lower        | String   | Lowercase form of the token                       |
 |  shape        | String   | "Hello World" => "Xxxxx Xxxxx"                    |
+|  gender       | String   | gender : GENDER_UNKNOWN, FEMININE, MASCULINE, NEUTER                    |
+|  person       | String   |                     |
+|  number       | String   |                     |
 |  is_lower     | Boolean  | Is the token in lowercase?                        |
 |  is_upper     | Boolean  | Is the token in uppercase?                        |
 |  is_title     | Boolean  | Is the token in titlecase?                        |
