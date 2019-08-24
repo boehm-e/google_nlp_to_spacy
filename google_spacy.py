@@ -37,7 +37,7 @@ class GSSpan(object):
             return GSSpan(self.txt, self.doc, start + self.start, end + self.start)
         else:
             if index < 0:
-                return self.doc[self.end + index]
+                return self.doc[self.end]
             else:
                 return self.doc[self.start + index]
 
