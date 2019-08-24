@@ -12,9 +12,14 @@ So (ideally) we only have to change a few line to our code and all is working.
 
 ### Prerequisites
 
-in order to run this, you will need the google cloud language package :
+In order to run this, you will need the google cloud language package :
 ```
 pip install google-cloud-language
+```
+
+You have to setup you google credentials:
+```
+GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
 ```
 
 # Usage
@@ -23,6 +28,7 @@ pip install google-cloud-language
 ### clone the repository
 ```
 git clone git@github.com:boehm-e/google_nlp_to_spacy.git
+cd google_nlp_to_spacy
 ```
 ### try it
 ```
