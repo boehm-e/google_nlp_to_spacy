@@ -11,6 +11,22 @@ person_tag = ('PERSON_UNKNOWN', 'FIRST', 'SECOND', 'THIRD', 'REFLEXIVE_PERSON')
 number_tag = ('NUMBER_UNKNOWN', 'SINGULAR', 'PLURAL', 'DUAL')
 
 
+def normalize_slice(length, start, stop, step=None):
+    if not (step is None or step == 1):
+        raise ValueError("test")
+    if start is None:
+        start = 0
+    elif start < 0:
+        start += length
+    start = min(length, max(0, start))
+    if stop is None:
+        stop = length
+    elif stop < 0:
+        stop += length
+    stop = min(length, max(start, stop))
+    return start, stop
+
+
 # # helpers
 # def to_string(txt):
 #     punctRegex = re.compile('\s(?=[\.\?!,])', flags=re.IGNORECASE)
@@ -32,8 +48,7 @@ class GSSpan(object):
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            start = index.start
-            end = index.stop
+            start, end = normalize_slice(len(self), index.start, index.stop, index.step)
             return GSSpan(self.txt, self.doc, start + self.start, end + self.start)
         else:
             if index < 0:
@@ -41,15 +56,23 @@ class GSSpan(object):
             else:
                 return self.doc[self.start + index]
 
+    def __iter__(self):
+        # self._recalculate_indices()
+        for i in range(self.start, self.end):
+            yield self.doc[i]
+
     def __str__(self):
         return self.to_string()
 
     def __repr__(self):
         return self.to_string()
 
+    def __len__(self):
+        return self.end - self.start
+
     def to_string(self):
         start = self.doc[self.start].idx
-        end = self.doc[self.end].idx + len(self.doc[self.end].text)
+        end = self.doc[self.end-1].idx + len(self.doc[self.end-1].text)
         txt = self.txt[start:end]
         return txt
 
@@ -72,7 +95,6 @@ class GSSpan(object):
         return obj
 
 
-
 class GSDoc(object):
     """docstring for GSDoc."""
 
@@ -80,7 +102,7 @@ class GSDoc(object):
         super(GSDoc, self).__init__()
         self.from_json = from_json
         self.txt = txt
-        self.raw = raw # data from google cloud nlp | from json dump
+        self.raw = raw  # data from google cloud nlp | from json dump
 
         if self.from_json is True:
             self.doc = self.process_tokens(self.raw["tokens"])
@@ -90,16 +112,19 @@ class GSDoc(object):
             self.sents = self.process_sentences(self.doc, self.raw.sentences)
 
     def __getitem__(self, index):
-        if isinstance(index, int):
-            return self.doc[index]
-
-        elif isinstance(index, slice):
-            start = index.start
-            end = index.stop
-            return GSSpan(self.txt, self.doc, start, end)
+        if isinstance(index, slice):
+            start, stop = normalize_slice(len(self.doc), index.start, index.stop, index.step)
+            return GSSpan(self.txt, self.doc, start, stop)
+        if index < 0:
+            index = self.length + index
+        # bounds_check(i, self.length, PADDING)
+        return self.doc[index]
 
     def __str__(self):
         return self.to_string()
+
+    def __len__(self):
+        return len(self.doc)
 
     def __repr__(self):
         return self.to_string()
@@ -272,6 +297,10 @@ class GoogleSpacy(object):
         flatten.sort(key=lambda x: x.i)
         return flatten
 
+    def doc_to_string(self, doc):
+        txt = " ".join([tok.text for tok in doc])
+        return to_string(txt)
+
     def nlp(self, raw, from_json=False):
         if from_json is False:
             text = raw
@@ -292,3 +321,12 @@ class GoogleSpacy(object):
             json = raw
             text = json["text"]
             return GSDoc(text, json, from_json=from_json)
+
+
+# helpers
+def to_string(txt):
+    punctRegex = re.compile('\s(?=[\.\?!,])', flags=re.IGNORECASE)
+    apostrophRegex = re.compile("(?<=(l'|s'|m'|n'|t'))\s", flags=re.IGNORECASE)
+    txt = punctRegex.sub('', txt)
+    txt = apostrophRegex.sub('', txt)
+    return txt
