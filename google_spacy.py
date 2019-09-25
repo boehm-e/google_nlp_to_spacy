@@ -198,7 +198,7 @@ class GSDoc(object):
             end = offset["end"]
             st = [tok for tok in doc if tok.idx >= begin and tok.idx <= end]
             _begin = st[0].i
-            _end = st[-1].i
+            _end = st[-1].i+1
 
             sentences.append(GSSpan(self.txt, doc, _begin, _end))
 
