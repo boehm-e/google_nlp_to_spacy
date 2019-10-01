@@ -45,6 +45,13 @@ class GSSpan(object):
         self.txt = txt
         self.start = start
         self.end = end
+        # print("=-=-=-=-=-=-=-=-=-=-=-=- CREATE SPAN ")
+        # print("DOC : ", self.doc)
+        # print("start : ", self.start)
+        # print("end : ", self.end)
+        # print("txt : ", self.txt)
+        # print("=-=-=-=-=-=-=-=-=-=-=-=-")
+
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -52,7 +59,12 @@ class GSSpan(object):
             return GSSpan(self.txt, self.doc, start + self.start, end + self.start)
         else:
             if index < 0:
-                return self.doc[self.end]
+                # print("=-=-=-=-=-=-=-=-=-=-=-=-")
+                # print("DOC : ", self.doc)
+                # print("END : ", self.end)
+                # print("DOCEND : ", self.doc[self.end])
+                # print("=-=-=-=-=-=-=-=-=-=-=-=-")
+                return self.doc[self.end-1]
             else:
                 return self.doc[self.start + index]
 
@@ -75,6 +87,25 @@ class GSSpan(object):
         end = self.doc[self.end-1].idx + len(self.doc[self.end-1].text)
         txt = self.txt[start:end]
         return txt
+
+    def find_children_direct(self, head):
+        return [tok for tok in self.doc if tok if tok.head.i == head.i]
+
+    def find_children_tree(self, head):
+        children_final = []  # liste contenant toute l'arborescence des enfants d'un token
+        children_direct = self.find_children_direct(head)  # liste contenant les enfants direct d'un token
+        children_final.append(children_direct)  # on ajoute au children_final, les enfants direct du token recherche
+        while children_direct:  # tant qu'on decouvre de nouveaux enfants a un token
+            new_children = []
+            for c in children_direct:
+                new_children += self.find_children_direct(c)
+
+            if len(new_children) > 0:
+                children_final.append(new_children)
+            children_direct = new_children
+        flatten = [item for sublist in children_final for item in sublist]  # flatten list
+        flatten.sort(key=lambda x: x.i)
+        return flatten
 
     def to_json(self):
         obj = {}
